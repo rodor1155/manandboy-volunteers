@@ -4,8 +4,6 @@ import Header from '@/components/Header'
 import { Event, Signup } from '@/lib/supabase'
 import { formatEventDate, isMultiDay } from '@/lib/dates'
 
-const LOGO = 'https://www.manandboy.org/images/elements/logo.png'
-
 export default function Home() {
   const [events, setEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState(true)
@@ -15,8 +13,10 @@ export default function Home() {
   const [signupModal, setSignupModal] = useState<Event | null>(null)
   const [emailInput, setEmailInput] = useState('')
   const [successMsg, setSuccessMsg] = useState('')
+  const [errorMsg, setErrorMsg] = useState('')
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [expandedEmails, setExpandedEmails] = useState<Set<string>>(new Set())
+  const [withdrawConfirmEventId, setWithdrawConfirmEventId] = useState<string | null>(null)
 
   const fetchEvents = useCallback(async () => {
     const res = await fetch('/api/events')
@@ -57,6 +57,7 @@ export default function Home() {
 
   async function handleSignup(event: Event) {
     if (!myName) { setShowNameModal(true); return }
+    setErrorMsg('')
     setActionLoading(event.id)
     const res = await fetch('/api/signups', {
       method: 'POST',
@@ -74,16 +75,15 @@ export default function Home() {
       setEmailInput('')
       setSuccessMsg(`You're signed up for ${event.title}!`)
       setTimeout(() => setSuccessMsg(''), 4000)
-      fetchEvents()
+      await fetchEvents()
     } else {
-      alert(data.error || 'Something went wrong')
+      setErrorMsg(data.error || 'Something went wrong')
     }
   }
 
   async function handleWithdraw(event: Event) {
     const signup = getMySignup(event)
     if (!signup) return
-    if (!confirm(`Remove yourself from ${event.title}?`)) return
     setActionLoading(event.id)
     await fetch('/api/signups', {
       method: 'DELETE',
@@ -91,6 +91,7 @@ export default function Home() {
       body: JSON.stringify({ signup_id: signup.id }),
     })
     setActionLoading(null)
+    setWithdrawConfirmEventId(null)
     fetchEvents()
   }
 
@@ -110,8 +111,6 @@ export default function Home() {
       {showNameModal && (
         <div className="overlay">
           <div className="modal">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={LOGO} alt="MAN&BOY" className="modal-logo" />
             <h2>Welcome!</h2>
             <p>Tell us your name so we can show your sign-ups and let you manage them.</p>
             <label className="modal-label">Your name</label>
@@ -132,10 +131,8 @@ export default function Home() {
 
       {/* Signup modal */}
       {signupModal && (
-        <div className="overlay" onClick={() => setSignupModal(null)}>
+        <div className="overlay" onClick={() => { setSignupModal(null); setErrorMsg('') }}>
           <div className="modal" onClick={e => e.stopPropagation()}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={LOGO} alt="MAN&BOY" className="modal-logo" />
             <h2>Sign up for</h2>
             <p style={{ fontWeight: 700, color: 'var(--navy)', marginBottom: '0.25rem' }}>
               {signupModal.title}
@@ -161,9 +158,21 @@ export default function Home() {
               onClick={() => handleSignup(signupModal)}
               disabled={!!actionLoading}
             >
-              {actionLoading ? 'Signing up...' : `Sign me up as ${myName}`}
+              {actionLoading ? 'Signing up...' : `Add me to event as ${myName}`}
             </button>
-            <button className="btn-secondary" onClick={() => setSignupModal(null)}>
+            {errorMsg && (
+              <div
+                className="success-msg"
+                style={{
+                  background: 'var(--red-pale)',
+                  borderColor: 'var(--red)',
+                  color: 'var(--red)',
+                }}
+              >
+                {errorMsg}
+              </div>
+            )}
+            <button className="btn-secondary" onClick={() => { setSignupModal(null); setErrorMsg('') }}>
               Cancel
             </button>
           </div>
@@ -221,9 +230,9 @@ export default function Home() {
                       {event.cancelled && <span className="event-badge cancelled">Cancelled</span>}
                       {!event.cancelled && full && <span className="event-badge full">Full</span>}
                       {!event.cancelled && multi && !full && <span className="event-badge multiday">Weekend</span>}
-                      {event.description && (
+                      {!!event.description?.trim() && (
                         <p style={{ fontSize: '0.82rem', color: 'var(--grey-dark)', marginTop: '0.3rem' }}>
-                          {event.description}
+                          {event.description.trim()}
                         </p>
                       )}
                       {event.max_volunteers && !event.cancelled && (
@@ -253,23 +262,50 @@ export default function Home() {
                           <span style={{ fontSize: '0.85rem', color: 'var(--green)', fontWeight: 700 }}>
                             ✓ You&apos;re signed up
                           </span>
-                          <button
-                            className="btn btn-withdraw"
-                            onClick={() => handleWithdraw(event)}
-                            disabled={actionLoading === event.id}
-                          >
-                            {actionLoading === event.id ? 'Removing...' : 'Remove me'}
-                          </button>
+                          {withdrawConfirmEventId === event.id ? (
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center' }}>
+                              <span style={{ fontSize: '0.85rem', color: 'var(--grey-dark)', fontWeight: 600 }}>
+                                Remove yourself?
+                              </span>
+                              <button
+                                className="btn btn-withdraw"
+                                onClick={() => handleWithdraw(event)}
+                                disabled={actionLoading === event.id}
+                              >
+                                {actionLoading === event.id ? 'Removing...' : 'Confirm'}
+                              </button>
+                              <button
+                                className="btn-secondary"
+                                onClick={() => setWithdrawConfirmEventId(null)}
+                                disabled={actionLoading === event.id}
+                                style={{ width: 'auto', marginTop: 0 }}
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              className="btn btn-withdraw"
+                              onClick={() => setWithdrawConfirmEventId(event.id)}
+                              disabled={actionLoading === event.id}
+                            >
+                              Remove me
+                            </button>
+                          )}
                         </>
                       ) : full ? (
                         <span className="full-message">This event is full. Contact the team if you&apos;d like to be added to the waiting list.</span>
                       ) : (
                         <button
                           className="btn btn-signup"
-                          onClick={() => myName ? setSignupModal(event) : setShowNameModal(true)}
+                          onClick={() => {
+                            if (!myName) { setShowNameModal(true); return }
+                            setErrorMsg('')
+                            setSignupModal(event)
+                          }}
                           disabled={actionLoading === event.id}
                         >
-                          {actionLoading === event.id ? 'Signing up...' : 'Sign me up'}
+                          {actionLoading === event.id ? 'Signing up...' : 'Add me to event'}
                         </button>
                       )}
                     </div>

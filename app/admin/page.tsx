@@ -5,7 +5,10 @@ import Header from '@/components/Header'
 import { Event, Signup } from '@/lib/supabase'
 import { formatEventDate } from '@/lib/dates'
 
-const LOGO = 'https://www.manandboy.org/images/elements/logo.png'
+type ConfirmAction = {
+  message: string
+  onConfirm: () => Promise<void> | void
+}
 
 type EventForm = {
   title: string
@@ -34,6 +37,7 @@ export default function AdminPage() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [expandedEvent, setExpandedEvent] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+  const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null)
 
   const fetchEvents = useCallback(async (p: string) => {
     setLoading(true)
@@ -114,23 +118,33 @@ export default function AdminPage() {
   }
 
   async function deleteEvent(event: Event) {
-    if (!confirm(`Permanently delete "${event.title}" and all its sign-ups? This cannot be undone.`)) return
-    await fetch('/api/admin', {
-      method: 'DELETE',
-      headers: adminHeader(),
-      body: JSON.stringify({ id: event.id }),
+    setConfirmAction({
+      message: `Permanently delete "${event.title}" and all its sign-ups? This cannot be undone.`,
+      onConfirm: async () => {
+        await fetch('/api/admin', {
+          method: 'DELETE',
+          headers: adminHeader(),
+          body: JSON.stringify({ id: event.id }),
+        })
+        setConfirmAction(null)
+        fetchEvents(pin)
+      },
     })
-    fetchEvents(pin)
   }
 
   async function removeSignup(signupId: string) {
-    if (!confirm('Remove this volunteer from the event?')) return
-    await fetch('/api/admin', {
-      method: 'DELETE',
-      headers: adminHeader(),
-      body: JSON.stringify({ signup_id: signupId }),
+    setConfirmAction({
+      message: 'Remove this volunteer from the event?',
+      onConfirm: async () => {
+        await fetch('/api/admin', {
+          method: 'DELETE',
+          headers: adminHeader(),
+          body: JSON.stringify({ signup_id: signupId }),
+        })
+        setConfirmAction(null)
+        fetchEvents(pin)
+      },
     })
-    fetchEvents(pin)
   }
 
   // MI calculations
@@ -146,8 +160,6 @@ export default function AdminPage() {
     return (
       <div className="pin-screen">
         <div className="pin-card">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={LOGO} alt="MAN&BOY" className="pin-logo" />
           <h2 className="pin-title">Admin Access</h2>
           <p className="pin-subtitle">Enter your 4-digit PIN to continue</p>
           {pinError && <p className="pin-error">Incorrect PIN. Please try again.</p>}
@@ -174,6 +186,45 @@ export default function AdminPage() {
     <>
       <Header />
       <main className="admin-page">
+        {confirmAction && (
+          <div
+            style={{
+              background: 'var(--red-pale)',
+              border: '1.5px solid var(--red)',
+              borderRadius: 10,
+              padding: '0.85rem 1rem',
+              marginBottom: '1rem',
+              display: 'flex',
+              gap: '0.75rem',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+            }}
+          >
+            <div style={{ color: 'var(--red)', fontWeight: 700 }}>
+              Are you sure?
+              <span style={{ fontWeight: 600, color: 'var(--red)', marginLeft: '0.5rem' }}>
+                {confirmAction.message}
+              </span>
+            </div>
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+              <button
+                className="btn-primary"
+                style={{ width: 'auto', padding: '0.55rem 1.25rem' }}
+                onClick={() => confirmAction.onConfirm()}
+              >
+                Confirm
+              </button>
+              <button
+                className="btn btn-withdraw"
+                style={{ padding: '0.55rem 1.25rem' }}
+                onClick={() => setConfirmAction(null)}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', marginBottom: '0.25rem' }}>
           <h1 className="page-title" style={{ marginBottom: 0 }}>Admin Panel</h1>
           <button
