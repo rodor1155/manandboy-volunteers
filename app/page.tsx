@@ -36,6 +36,13 @@ export default function Home() {
     }
   }, [fetchEvents])
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchEvents()
+    }, 10000)
+    return () => clearInterval(interval)
+  }, [fetchEvents])
+
   function saveName() {
     if (!nameInput.trim()) return
     const name = nameInput.trim()
@@ -72,6 +79,14 @@ export default function Home() {
     const data = await res.json()
     setActionLoading(null)
     if (res.ok) {
+      // Optimistically update local state immediately
+      setEvents(prev => prev.map(e => {
+        if (e.id !== event.id) return e
+        return {
+          ...e,
+          signups: [...(e.signups || []), data]
+        }
+      }))
       setSignupModal(null)
       setEmailInput('')
       setSuccessMsg(`You're signed up for ${event.title}!`)
