@@ -38,6 +38,7 @@ export default function AdminPage() {
   const [expandedEvent, setExpandedEvent] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null)
+  const [statusMsg, setStatusMsg] = useState('')
 
   const fetchEvents = useCallback(async (p: string) => {
     setLoading(true)
@@ -136,13 +137,17 @@ export default function AdminPage() {
     setConfirmAction({
       message: 'Remove this volunteer from the event?',
       onConfirm: async () => {
-        await fetch('/api/admin', {
+        const res = await fetch('/api/admin', {
           method: 'DELETE',
           headers: adminHeader(),
           body: JSON.stringify({ signup_id: signupId }),
         })
+        if (res.ok) {
+          setStatusMsg('Volunteer removed')
+          setTimeout(() => setStatusMsg(''), 3000)
+        }
         setConfirmAction(null)
-        fetchEvents(pin)
+        await fetchEvents(pin)
       },
     })
   }
@@ -225,6 +230,7 @@ export default function AdminPage() {
             </div>
           </div>
         )}
+        {statusMsg && <div className="success-msg">{statusMsg}</div>}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', marginBottom: '0.25rem' }}>
           <h1 className="page-title" style={{ marginBottom: 0 }}>Admin Panel</h1>
           <button
