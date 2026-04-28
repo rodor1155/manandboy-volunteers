@@ -183,7 +183,7 @@ export default function Home() {
               className="name-banner-change"
               onClick={() => { setNameInput(myName); setShowNameModal(true) }}
             >
-              Change name
+              Switch volunteer
             </button>
           </div>
         )}

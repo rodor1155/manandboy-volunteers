@@ -55,6 +55,12 @@ export default function AdminPage() {
     }
   }
 
+  function handleLogout() {
+    setAuthed(false)
+    setPin('')
+    setEvents([])
+  }
+
   function adminHeader() {
     return { 'x-admin-pin': pin, 'Content-Type': 'application/json' }
   }
@@ -165,7 +171,16 @@ export default function AdminPage() {
     <>
       <Header />
       <main className="admin-page">
-        <h1 className="page-title" style={{ marginBottom: '0.25rem' }}>Admin Panel</h1>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', marginBottom: '0.25rem' }}>
+          <h1 className="page-title" style={{ marginBottom: 0 }}>Admin Panel</h1>
+          <button
+            className="btn btn-withdraw"
+            style={{ padding: '0.65rem 1.5rem' }}
+            onClick={handleLogout}
+          >
+            Log out
+          </button>
+        </div>
         <p className="page-subtitle" style={{ marginBottom: '2rem' }}>Manage events and view volunteer sign-ups.</p>
 
         {/* MI Dashboard */}
