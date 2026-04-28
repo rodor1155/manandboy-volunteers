@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import Header from '@/components/Header'
 import { Event, Signup } from '@/lib/supabase'
 import { formatEventDate } from '@/lib/dates'
@@ -23,6 +24,7 @@ const emptyForm: EventForm = {
 }
 
 export default function AdminPage() {
+  const router = useRouter()
   const [pin, setPin] = useState('')
   const [authed, setAuthed] = useState(false)
   const [pinError, setPinError] = useState(false)
@@ -59,6 +61,7 @@ export default function AdminPage() {
     setAuthed(false)
     setPin('')
     setEvents([])
+    router.push('/')
   }
 
   function adminHeader() {
