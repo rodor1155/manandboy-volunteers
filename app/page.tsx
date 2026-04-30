@@ -10,6 +10,7 @@ export default function Home() {
   const [myName, setMyName] = useState<string>('')
   const [showNameModal, setShowNameModal] = useState(false)
   const [nameInput, setNameInput] = useState('')
+  const [nameChosen, setNameChosen] = useState(false)
   const [nameSelected, setNameSelected] = useState(false)
   const [signupModal, setSignupModal] = useState<Event | null>(null)
   const [emailInput, setEmailInput] = useState('')
@@ -59,6 +60,7 @@ export default function Home() {
     localStorage.setItem('mb_volunteer_name', name)
     setShowNameModal(false)
     setNameInput('')
+    setNameChosen(false)
   }
 
   function getMySignup(event: Event): Signup | undefined {
@@ -143,10 +145,10 @@ export default function Home() {
               className="modal-input"
               placeholder="Start typing..."
               value={nameInput}
-              onChange={e => setNameInput(e.target.value)}
+              onChange={e => { setNameInput(e.target.value); setNameChosen(false) }}
               autoFocus
             />
-            {nameInput.length > 0 && (
+            {nameInput.length > 0 && !nameChosen && (
               <div style={{
                 border: '2px solid var(--grey-light)',
                 borderRadius: '8px',
@@ -166,7 +168,7 @@ export default function Home() {
                   .map(name => (
                     <div
                       key={name}
-                      onClick={() => setNameInput(name)}
+                      onClick={() => { setNameInput(name); setNameChosen(true) }}
                       style={{
                         padding: '0.65rem 1rem',
                         cursor: 'pointer',
