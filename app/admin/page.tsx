@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Header from '@/components/Header'
 import { Event, Signup } from '@/lib/supabase'
@@ -70,18 +70,21 @@ export default function AdminPage() {
   async function handleSave() {
     if (!form.title || !form.date_start) return alert('Title and start date are required')
     setSaving(true)
-    if (editingId) {
-      await fetch('/api/admin', {
+    const res = editingId
+      ? await fetch('/api/admin', {
         method: 'PATCH',
         headers: adminHeader(),
         body: JSON.stringify({ id: editingId, ...form }),
       })
-    } else {
-      await fetch('/api/admin', {
+      : await fetch('/api/admin', {
         method: 'POST',
         headers: adminHeader(),
         body: JSON.stringify(form),
       })
+    if (!res.ok) {
+      setStatusMsg('Failed to save event. Please try again.')
+      setSaving(false)
+      return
     }
     setForm(emptyForm)
     setEditingId(null)

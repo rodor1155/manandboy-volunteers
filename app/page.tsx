@@ -11,20 +11,13 @@ export default function Home() {
   const [showNameModal, setShowNameModal] = useState(false)
   const [nameInput, setNameInput] = useState('')
   const [nameChosen, setNameChosen] = useState(false)
-  const [nameSelected, setNameSelected] = useState(false)
   const [signupModal, setSignupModal] = useState<Event | null>(null)
   const [emailInput, setEmailInput] = useState('')
   const [successMsg, setSuccessMsg] = useState('')
   const [errorMsg, setErrorMsg] = useState('')
   const [actionLoading, setActionLoading] = useState<string | null>(null)
-  const [expandedEmails, setExpandedEmails] = useState<Set<string>>(new Set())
   const [withdrawConfirmEventId, setWithdrawConfirmEventId] = useState<string | null>(null)
   const [lastSignup, setLastSignup] = useState<number>(0)
-
-  const filteredNames = nameInput.trim().length < 1
-    ? []
-    : ['Harry', 'Jim', 'Olly', 'Ross', 'Clare', 'Sam', 'Tom', 'Dan', 'Pete', 'Mike']
-      .filter(n => n.toLowerCase().includes(nameInput.trim().toLowerCase()))
 
   const fetchEvents = useCallback(async () => {
     const res = await fetch('/api/events', { cache: 'no-store' })
@@ -112,13 +105,19 @@ export default function Home() {
     const signup = getMySignup(event)
     if (!signup) return
     setActionLoading(event.id)
-    await fetch('/api/signups', {
+    const res = await fetch('/api/signups', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ signup_id: signup.id }),
     })
     setActionLoading(null)
     setWithdrawConfirmEventId(null)
+    if (res.ok) {
+      setEvents(prev => prev.map(e => {
+        if (e.id !== event.id) return e
+        return { ...e, signups: (e.signups || []).filter(s => s.id !== signup.id) }
+      }))
+    }
   }
 
   function getDateParts(event: Event) {
@@ -256,7 +255,7 @@ export default function Home() {
             </div>
             <button
               className="name-banner-change"
-              onClick={() => { setMyName(''); setNameInput(''); localStorage.removeItem('mb_volunteer_name'); setShowNameModal(true) }}
+              onClick={() => { setMyName(''); setNameInput(''); setNameChosen(false); localStorage.removeItem('mb_volunteer_name'); setShowNameModal(true) }}
             >
               Sign Out
             </button>
@@ -384,4 +383,3 @@ export default function Home() {
     </>
   )
 }
-// cache bust Thu Apr 30 22:14:50 BST 2026
