@@ -107,7 +107,6 @@ export default function Home() {
     })
     setActionLoading(null)
     setWithdrawConfirmEventId(null)
-    fetchEvents()
   }
 
   function getDateParts(event: Event) {
