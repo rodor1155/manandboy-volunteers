@@ -138,6 +138,7 @@ export default function Home() {
             <h2>Welcome!</h2>
             <p>Type the first few letters of your name to find yourself.</p>
             <label className="modal-label">Your name</label>
+            <div style={{ position: 'relative' }}>
             <input
               className="modal-input"
               placeholder="Start typing..."
@@ -151,9 +152,11 @@ export default function Home() {
                 borderRadius: '8px',
                 marginBottom: '0.75rem',
                 maxHeight: '200px',
-                overflowY: 'auto',
-                position: 'relative',
-                zIndex: 1000,
+                overflowY: 'scroll',
+                position: 'absolute',
+                width: '100%',
+                zIndex: 9999,
+                background: 'white',
               }}>
                 {[
                   'Clare', 'Dan', 'Harry', 'Jim', 'Mike',
@@ -179,6 +182,7 @@ export default function Home() {
                   ))}
               </div>
             )}
+            </div>
             <button className="btn-primary" onClick={saveName}>
               Let&apos;s go
             </button>
