@@ -91,7 +91,6 @@ export default function Home() {
       setEmailInput('')
       setSuccessMsg(`You're signed up for ${event.title}!`)
       setTimeout(() => setSuccessMsg(''), 4000)
-      await fetchEvents()
     } else {
       setErrorMsg(data.error || 'Something went wrong')
     }
