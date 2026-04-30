@@ -138,54 +138,57 @@ export default function Home() {
         <div className="overlay">
           <div className="modal" style={{ overflow: 'visible' }}>
             <h2>Welcome!</h2>
-            <p>Type the first few letters of your name to find yourself.</p>
+            <p>Select your name from the list below.</p>
             <label className="modal-label">Your name</label>
             <div style={{ position: 'relative' }}>
-            <input
-              className="modal-input"
-              placeholder="Start typing..."
-              value={nameInput}
-              onChange={e => { setNameInput(e.target.value); setNameChosen(false) }}
-              autoFocus
-            />
-            {nameInput.length > 0 && !nameChosen && (
+              <input
+                className="modal-input"
+                placeholder="Start typing to filter..."
+                value={nameInput}
+                onChange={e => { setNameInput(e.target.value); setNameChosen(false) }}
+                autoFocus
+                style={{ marginBottom: 0 }}
+              />
               <div style={{
                 border: '2px solid var(--grey-light)',
-                borderRadius: '8px',
-                marginBottom: '0.75rem',
-                maxHeight: '200px',
-                overflowY: 'scroll',
+                borderTop: 'none',
+                borderRadius: '0 0 8px 8px',
+                maxHeight: '220px',
+                overflowY: 'auto',
+                background: 'white',
                 position: 'absolute',
                 width: '100%',
                 zIndex: 9999,
-                background: 'white',
+                display: nameChosen ? 'none' : 'block',
               }}>
-                {[
-                  'Clare', 'Dan', 'Harry', 'Jim', 'Mike',
-                  'Olly', 'Pete', 'Ross', 'Sam', 'Tom'
-                ]
-                  .filter(n => n.toLowerCase().startsWith(nameInput.toLowerCase()))
+                {['Clare', 'Dan', 'Harry', 'Jim', 'Mike', 'Olly', 'Pete', 'Ross', 'Sam', 'Tom']
+                  .filter(n => nameInput.trim() === '' || n.toLowerCase().startsWith(nameInput.toLowerCase()))
                   .map(name => (
                     <div
                       key={name}
                       onClick={() => { setNameInput(name); setNameChosen(true) }}
                       style={{
-                        padding: '0.65rem 1rem',
+                        padding: '0.75rem 1rem',
                         cursor: 'pointer',
                         borderBottom: '1px solid var(--grey-light)',
                         fontWeight: 600,
                         color: 'var(--navy)',
+                        background: 'white',
                       }}
                       onMouseEnter={e => (e.currentTarget.style.background = 'var(--orange-pale)')}
-                      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                      onMouseLeave={e => (e.currentTarget.style.background = 'white')}
                     >
                       {name}
                     </div>
                   ))}
               </div>
-            )}
             </div>
-            <button className="btn-primary" onClick={saveName}>
+            <button
+              className="btn-primary"
+              onClick={saveName}
+              disabled={!nameChosen}
+              style={{ marginTop: '1rem', opacity: nameChosen ? 1 : 0.4 }}
+            >
               Let&apos;s go
             </button>
           </div>
