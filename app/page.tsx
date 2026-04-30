@@ -39,10 +39,8 @@ export default function Home() {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      if (Date.now() - lastSignup > 15000) {
-        fetchEvents()
-      }
-    }, 60000)
+      fetchEvents()
+    }, 30000)
     return () => clearInterval(interval)
   }, [fetchEvents, lastSignup])
 
