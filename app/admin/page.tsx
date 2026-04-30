@@ -5,11 +5,12 @@ import Header from '@/components/Header'
 import { Event, Signup } from '@/lib/supabase'
 import { formatEventDate, isMultiDay } from '@/lib/dates'
 
-export default function Home() {
-  const router = useRouter()
+export default function AdminPage() {
   const [authed, setAuthed] = useState(false)
   const [pin, setPin] = useState('')
   const [events, setEvents] = useState<Event[]>([])
+  const [saving, setSaving] = useState(false)
+  const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [myName, setMyName] = useState<string>('')
   const [showNameModal, setShowNameModal] = useState(false)
@@ -209,7 +210,12 @@ export default function Home() {
       )}
 
       <main className="page">
-        <h1 className="page-title">Upcoming Events</h1>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
+          <h1 className="page-title" style={{ margin: 0 }}>Admin Panel</h1>
+          <button className="btn-secondary" onClick={handleLogout} style={{ width: 'auto', marginTop: 0 }}>
+            Log out
+          </button>
+        </div>
         <p className="page-subtitle">Select the events you&apos;d like to volunteer for.</p>
 
         {myName && (
