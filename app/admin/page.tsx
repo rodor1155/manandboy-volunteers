@@ -210,11 +210,11 @@ export default function AdminPage() {
       )}
 
       <main className="page">
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
-          <h1 className="page-title" style={{ margin: 0 }}>Admin Panel</h1>
-          <button className="btn-secondary" onClick={handleLogout} style={{ width: 'auto', marginTop: 0 }}>
-            Log out
-          </button>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <h1 className="page-title" style={{ margin: 0 }}>
+            Admin Panel
+            <button onClick={handleLogout} style={{ fontSize: '0.85rem', fontWeight: 600, background: 'none', border: '1px solid #ccc', borderRadius: '6px', padding: '0.3rem 0.75rem', cursor: 'pointer', marginLeft: 'auto' }}>Log out</button>
+          </h1>
         </div>
         <p className="page-subtitle">Select the events you&apos;d like to volunteer for.</p>
 
