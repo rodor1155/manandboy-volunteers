@@ -10,6 +10,7 @@ export default function Home() {
   const [myName, setMyName] = useState<string>('')
   const [showNameModal, setShowNameModal] = useState(false)
   const [nameInput, setNameInput] = useState('')
+  const [nameSelected, setNameSelected] = useState(false)
   const [signupModal, setSignupModal] = useState<Event | null>(null)
   const [emailInput, setEmailInput] = useState('')
   const [successMsg, setSuccessMsg] = useState('')
@@ -18,6 +19,11 @@ export default function Home() {
   const [expandedEmails, setExpandedEmails] = useState<Set<string>>(new Set())
   const [withdrawConfirmEventId, setWithdrawConfirmEventId] = useState<string | null>(null)
   const [lastSignup, setLastSignup] = useState<number>(0)
+
+  const filteredNames = nameInput.trim().length < 1
+    ? []
+    : ['Harry', 'Jim', 'Olly', 'Ross', 'Clare', 'Sam', 'Tom', 'Dan', 'Pete', 'Mike']
+      .filter(n => n.toLowerCase().includes(nameInput.trim().toLowerCase()))
 
   const fetchEvents = useCallback(async () => {
     const res = await fetch('/api/events', { cache: 'no-store' })
@@ -132,19 +138,51 @@ export default function Home() {
             <h2>Welcome!</h2>
             <p>Tell us your name so we can show your sign-ups and let you manage them.</p>
             <label className="modal-label">Your name</label>
-            <select
-              className="modal-input"
-              value={nameInput}
-              onChange={e => setNameInput(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && saveName()}
-              autoFocus
-            >
-              <option value="">Select your name...</option>
-              {['Harry', 'Jim', 'Olly', 'Ross', 'Clare', 'Sam', 'Tom', 'Dan', 'Pete', 'Mike'].map(n => (
-                <option key={n} value={n}>{n}</option>
-              ))}
-            </select>
-            <button className="btn-primary" onClick={saveName}>
+            <div style={{ position: 'relative' }}>
+              <input
+                className="modal-input"
+                placeholder="Type your name..."
+                value={nameInput}
+                onChange={e => { setNameInput(e.target.value); setNameSelected(false) }}
+                onKeyDown={e => e.key === 'Enter' && nameSelected && saveName()}
+                autoFocus
+              />
+              {!nameSelected && filteredNames.length > 0 && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: 'calc(100% + 6px)',
+                    left: 0,
+                    right: 0,
+                    background: 'var(--white)',
+                    border: '1px solid #ccc',
+                    borderRadius: '8px',
+                    overflow: 'hidden',
+                    zIndex: 10,
+                  }}
+                >
+                  {filteredNames.map(n => (
+                    <div
+                      key={n}
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => { setNameInput(n); setNameSelected(true) }}
+                      onKeyDown={e => e.key === 'Enter' && (setNameInput(n), setNameSelected(true))}
+                      style={{
+                        padding: '0.55rem 0.75rem',
+                        cursor: 'pointer',
+                        borderBottom: '1px solid rgba(0,0,0,0.06)',
+                      }}
+                      onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.background = 'rgba(0,0,0,0.04)' }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.background = 'transparent' }}
+                    >
+                      {n}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <button className="btn-primary" onClick={() => nameSelected && saveName()} disabled={!nameSelected}>
               Let&apos;s go
             </button>
           </div>
