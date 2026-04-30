@@ -152,6 +152,8 @@ export default function Home() {
                 marginBottom: '0.75rem',
                 maxHeight: '200px',
                 overflowY: 'auto',
+                position: 'relative',
+                zIndex: 1000,
               }}>
                 {[
                   'Clare', 'Dan', 'Harry', 'Jim', 'Mike',
@@ -245,7 +247,7 @@ export default function Home() {
             </div>
             <button
               className="name-banner-change"
-              onClick={() => { setNameInput(myName); setShowNameModal(true) }}
+              onClick={() => { setNameInput(''); setMyName(''); localStorage.removeItem('mb_volunteer_name'); setShowNameModal(true) }}
             >
               Sign Out
             </button>
