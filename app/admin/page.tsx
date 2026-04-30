@@ -1,10 +1,14 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import Header from '@/components/Header'
 import { Event, Signup } from '@/lib/supabase'
 import { formatEventDate, isMultiDay } from '@/lib/dates'
 
 export default function Home() {
+  const router = useRouter()
+  const [authed, setAuthed] = useState(false)
+  const [pin, setPin] = useState('')
   const [events, setEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState(true)
   const [myName, setMyName] = useState<string>('')
@@ -15,6 +19,13 @@ export default function Home() {
   const [successMsg, setSuccessMsg] = useState('')
   const [errorMsg, setErrorMsg] = useState('')
   const [actionLoading, setActionLoading] = useState<string | null>(null)
+
+  function handleLogout() {
+    setAuthed(false)
+    setPin('')
+    setEvents([])
+    router.push('/')
+  }
 
   const fetchEvents = useCallback(async () => {
     const res = await fetch('/api/events', { cache: 'no-store' })

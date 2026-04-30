@@ -207,7 +207,7 @@ export default function Home() {
               className="name-banner-change"
               onClick={() => { setNameInput(myName); setShowNameModal(true) }}
             >
-              Switch volunteer
+              Sign Out
             </button>
           </div>
         )}
