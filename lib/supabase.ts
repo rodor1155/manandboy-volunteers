@@ -11,6 +11,7 @@ export type Event = {
   date_start: string
   date_end: string | null
   description: string | null
+  address?: string | null
   max_volunteers: number | null
   cancelled: boolean
   created_at: string

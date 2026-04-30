@@ -10,6 +10,7 @@ type EventForm = {
   date_start: string
   date_end: string
   description: string
+  address: string
   max_volunteers: string
 }
 
@@ -18,6 +19,7 @@ const emptyForm: EventForm = {
   date_start: '',
   date_end: '',
   description: '',
+  address: '',
   max_volunteers: '',
 }
 
@@ -121,6 +123,7 @@ export default function AdminPage() {
       date_start: event.date_start,
       date_end: event.date_end ?? '',
       description: event.description ?? '',
+      address: event.address ?? '',
       max_volunteers: event.max_volunteers?.toString() ?? '',
     })
     window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -367,6 +370,15 @@ export default function AdminPage() {
                 <label className="form-label">Description <span style={{ fontWeight: 400, color: 'var(--grey-dark)' }}>(optional)</span></label>
                 <input className="form-input" value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="Short note for volunteers" />
               </div>
+            </div>
+            <div className="form-group">
+              <label className="form-label">Address <span style={{ fontWeight: 400, color: 'var(--grey-dark)' }}>(optional, include postcode)</span></label>
+              <input
+                className="form-input"
+                value={form.address}
+                onChange={e => setForm(f => ({ ...f, address: e.target.value }))}
+                placeholder="e.g. Dorking Sports Centre, Dorking, RH4 1NX"
+              />
             </div>
             <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
               <button className="btn-primary" style={{ width: 'auto', padding: '0.65rem 2rem' }} onClick={handleSave} disabled={saving}>

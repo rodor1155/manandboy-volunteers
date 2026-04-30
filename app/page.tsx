@@ -297,6 +297,25 @@ export default function Home() {
                           {event.description.trim()}
                         </p>
                       )}
+                      {event.address && (
+                        <a
+                          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.address)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.3rem',
+                            fontSize: '0.82rem',
+                            color: 'var(--orange)',
+                            fontWeight: 600,
+                            marginTop: '0.4rem',
+                            textDecoration: 'none',
+                          }}
+                        >
+                          📍 {event.address}
+                        </a>
+                      )}
                       {event.max_volunteers && !event.cancelled && (
                         <div className="volunteer-spots">
                           {signupCount} / {event.max_volunteers} volunteers
