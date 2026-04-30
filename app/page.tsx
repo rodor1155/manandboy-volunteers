@@ -17,6 +17,7 @@ export default function Home() {
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [expandedEmails, setExpandedEmails] = useState<Set<string>>(new Set())
   const [withdrawConfirmEventId, setWithdrawConfirmEventId] = useState<string | null>(null)
+  const [lastSignup, setLastSignup] = useState<number>(0)
 
   const fetchEvents = useCallback(async () => {
     const res = await fetch('/api/events', { cache: 'no-store' })
@@ -38,10 +39,12 @@ export default function Home() {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      fetchEvents()
+      if (Date.now() - lastSignup > 15000) {
+        fetchEvents()
+      }
     }, 10000)
     return () => clearInterval(interval)
-  }, [fetchEvents])
+  }, [fetchEvents, lastSignup])
 
   function saveName() {
     if (!nameInput.trim()) return
@@ -87,6 +90,7 @@ export default function Home() {
           signups: [...(e.signups || []), data]
         }
       }))
+      setLastSignup(Date.now())
       setSignupModal(null)
       setEmailInput('')
       setSuccessMsg(`You're signed up for ${event.title}!`)
