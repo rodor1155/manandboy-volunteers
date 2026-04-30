@@ -345,6 +345,7 @@ input, textarea, select {
   justify-content: center;
   z-index: 100;
   padding: 1rem;
+  pointer-events: none;
 }
 
 .modal {
@@ -355,6 +356,7 @@ input, textarea, select {
   max-width: 420px;
   box-shadow: 0 20px 60px rgba(0,0,0,0.2);
   overflow: visible;
+  pointer-events: all;
 }
 
 .modal-logo {

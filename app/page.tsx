@@ -147,7 +147,7 @@ export default function Home() {
 
       {/* Name modal */}
       {showNameModal && (
-        <div className="overlay">
+        <div className="overlay" style={{ alignItems: 'flex-start', paddingTop: '100px' }}>
           <div className="modal" style={{ overflow: 'visible' }}>
             <h2>Welcome!</h2>
             <p>Select your name from the list below.</p>
