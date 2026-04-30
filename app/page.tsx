@@ -134,7 +134,7 @@ export default function Home() {
       {/* Name modal */}
       {showNameModal && (
         <div className="overlay">
-          <div className="modal">
+          <div className="modal" style={{ overflow: 'visible' }}>
             <h2>Welcome!</h2>
             <p>Type the first few letters of your name to find yourself.</p>
             <label className="modal-label">Your name</label>
@@ -247,7 +247,7 @@ export default function Home() {
             </div>
             <button
               className="name-banner-change"
-              onClick={() => { setNameInput(''); setMyName(''); localStorage.removeItem('mb_volunteer_name'); setShowNameModal(true) }}
+              onClick={() => { setMyName(''); setNameInput(''); localStorage.removeItem('mb_volunteer_name'); setShowNameModal(true) }}
             >
               Sign Out
             </button>
