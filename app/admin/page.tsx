@@ -33,6 +33,9 @@ export default function AdminPage() {
   const [saving, setSaving] = useState(false)
   const [statusMsg, setStatusMsg] = useState('')
   const router = useRouter()
+  const [volunteers, setVolunteers] = useState<Array<{ id: string; name: string; email: string | null; notes: string | null; active: boolean }>>([])
+  const [volunteerForm, setVolunteerForm] = useState({ name: '', email: '', notes: '' })
+  const [editingVolunteerId, setEditingVolunteerId] = useState<string | null>(null)
 
   const fetchEvents = useCallback(async (p: string) => {
     setLoading(true)
@@ -46,6 +49,24 @@ export default function AdminPage() {
     setLoading(false)
   }, [])
 
+  async function fetchVolunteers(p: string) {
+    const res = await fetch('/api/volunteers', {
+      headers: { 'x-admin-pin': p },
+    })
+    if (!res.ok) return
+    const data = await res.json()
+    if (!Array.isArray(data)) return
+    setVolunteers(
+      data.map((row: { id: string; name: string; email: string | null; notes: string | null; active?: boolean }) => ({
+        id: row.id,
+        name: row.name,
+        email: row.email ?? null,
+        notes: row.notes ?? null,
+        active: row.active ?? true,
+      }))
+    )
+  }
+
   function handleLogout() {
     setAuthed(false)
     setPin('')
@@ -58,6 +79,7 @@ export default function AdminPage() {
       setAuthed(true)
       setPinError(false)
       fetchEvents(pin)
+      fetchVolunteers(pin)
     } else {
       setPinError(true)
     }
@@ -132,6 +154,54 @@ export default function AdminPage() {
     setStatusMsg('Volunteer removed')
     setTimeout(() => setStatusMsg(''), 3000)
     fetchEvents(pin)
+  }
+
+  async function handleSaveVolunteer() {
+    if (!volunteerForm.name.trim()) return
+    if (editingVolunteerId) {
+      await fetch('/api/volunteers', {
+        method: 'PATCH',
+        headers: adminHeader(),
+        body: JSON.stringify({
+          id: editingVolunteerId,
+          name: volunteerForm.name.trim(),
+          email: volunteerForm.email || null,
+          notes: volunteerForm.notes || null,
+        }),
+      })
+    } else {
+      await fetch('/api/volunteers', {
+        method: 'POST',
+        headers: adminHeader(),
+        body: JSON.stringify({
+          name: volunteerForm.name.trim(),
+          email: volunteerForm.email || null,
+          notes: volunteerForm.notes || null,
+        }),
+      })
+    }
+    setVolunteerForm({ name: '', email: '', notes: '' })
+    setEditingVolunteerId(null)
+    fetchVolunteers(pin)
+  }
+
+  async function handleDeleteVolunteer(id: string) {
+    if (!confirm('Delete this volunteer?')) return
+    await fetch('/api/volunteers', {
+      method: 'DELETE',
+      headers: adminHeader(),
+      body: JSON.stringify({ id }),
+    })
+    fetchVolunteers(pin)
+  }
+
+  async function handleToggleActive(v: { id: string; active: boolean }) {
+    await fetch('/api/volunteers', {
+      method: 'PATCH',
+      headers: adminHeader(),
+      body: JSON.stringify({ id: v.id, active: !v.active }),
+    })
+    fetchVolunteers(pin)
   }
 
   const totalSignups = events.reduce((sum, e) => sum + (e.signups?.length ?? 0), 0)
@@ -293,6 +363,100 @@ export default function AdminPage() {
               )
             })
           )}
+        </div>
+
+        <div className="admin-section">
+          <div className="admin-section-title">Volunteers</div>
+          <div className="event-form-card">
+            <div className="event-form-title">{editingVolunteerId ? 'Edit volunteer' : 'Add volunteer'}</div>
+            <div className="form-group">
+              <label className="form-label">Name *</label>
+              <input
+                className="form-input"
+                value={volunteerForm.name}
+                onChange={e => setVolunteerForm(f => ({ ...f, name: e.target.value }))}
+                placeholder="Full name"
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Email <span style={{ fontWeight: 400, color: 'var(--grey-dark)' }}>(optional)</span></label>
+              <input
+                className="form-input"
+                type="email"
+                value={volunteerForm.email}
+                onChange={e => setVolunteerForm(f => ({ ...f, email: e.target.value }))}
+                placeholder="email@example.com"
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Notes <span style={{ fontWeight: 400, color: 'var(--grey-dark)' }}>(optional)</span></label>
+              <input
+                className="form-input"
+                value={volunteerForm.notes}
+                onChange={e => setVolunteerForm(f => ({ ...f, notes: e.target.value }))}
+                placeholder="Internal notes"
+              />
+            </div>
+            <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
+              <button className="btn-primary" style={{ width: 'auto', padding: '0.65rem 2rem' }} type="button" onClick={handleSaveVolunteer}>
+                {editingVolunteerId ? 'Update volunteer' : 'Add volunteer'}
+              </button>
+              {editingVolunteerId && (
+                <button
+                  className="btn btn-withdraw"
+                  style={{ padding: '0.65rem 1.5rem' }}
+                  type="button"
+                  onClick={() => { setVolunteerForm({ name: '', email: '', notes: '' }); setEditingVolunteerId(null) }}
+                >
+                  Cancel
+                </button>
+              )}
+            </div>
+          </div>
+          <div style={{ marginTop: '1.25rem' }}>
+            {volunteers.map(v => (
+              <div
+                key={v.id}
+                style={{
+                  opacity: v.active ? 1 : 0.45,
+                  padding: '1rem',
+                  border: '1px solid var(--grey-light)',
+                  borderRadius: '8px',
+                  marginBottom: '0.75rem',
+                  background: 'var(--white)',
+                }}
+              >
+                <div style={{ fontWeight: 700, color: 'var(--navy)', marginBottom: '0.35rem' }}>{v.name}</div>
+                <div style={{ fontSize: '0.85rem', color: 'var(--grey-dark)', marginBottom: '0.25rem' }}>
+                  <strong>Email:</strong> {v.email || '—'}
+                </div>
+                <div style={{ fontSize: '0.85rem', color: 'var(--grey-dark)', marginBottom: '0.25rem' }}>
+                  <strong>Notes:</strong> {v.notes || '—'}
+                </div>
+                <div style={{ fontSize: '0.85rem', color: 'var(--grey-dark)', marginBottom: '0.75rem' }}>
+                  <strong>Status:</strong> {v.active ? 'Active' : 'Inactive'}
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                  <button
+                    type="button"
+                    className="btn-sm btn-edit"
+                    onClick={() => {
+                      setEditingVolunteerId(v.id)
+                      setVolunteerForm({ name: v.name, email: v.email || '', notes: v.notes || '' })
+                    }}
+                  >
+                    Edit
+                  </button>
+                  <button type="button" className="btn-sm btn-cancel-event" onClick={() => handleToggleActive(v)}>
+                    {v.active ? 'Deactivate' : 'Activate'}
+                  </button>
+                  <button type="button" className="btn-sm btn-delete" onClick={() => handleDeleteVolunteer(v.id)}>
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </main>
     </>

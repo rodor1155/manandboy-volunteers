@@ -17,6 +17,7 @@ export default function Home() {
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [withdrawConfirmEventId, setWithdrawConfirmEventId] = useState<string | null>(null)
   const [lastSignup, setLastSignup] = useState<number>(0)
+  const [volunteerNames, setVolunteerNames] = useState<string[]>([])
 
   const fetchEvents = useCallback(async () => {
     const res = await fetch('/api/events', { cache: 'no-store' })
@@ -44,6 +45,21 @@ export default function Home() {
     }, 60000)
     return () => clearInterval(interval)
   }, [fetchEvents, lastSignup])
+
+  useEffect(() => {
+    async function loadVolunteers() {
+      const res = await fetch('/api/volunteers', { cache: 'no-store' })
+      if (!res.ok) return
+      const data = await res.json()
+      if (!Array.isArray(data)) return
+      const names = data
+        .map((v: { name: string }) => v.name)
+        .filter((n: string) => typeof n === 'string')
+        .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
+      setVolunteerNames(names)
+    }
+    loadVolunteers()
+  }, [])
 
   function saveName() {
     if (!nameInput.trim()) return
@@ -157,7 +173,7 @@ export default function Home() {
                 zIndex: 9999,
                 display: nameChosen ? 'none' : 'block',
               }}>
-                {['Clare', 'Dan', 'Harry', 'Jim', 'Mike', 'Olly', 'Pete', 'Ross', 'Sam', 'Tom']
+                {volunteerNames
                   .filter(n => nameInput.trim() === '' || n.toLowerCase().startsWith(nameInput.toLowerCase()))
                   .map(name => (
                     <div
