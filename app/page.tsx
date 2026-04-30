@@ -136,53 +136,48 @@ export default function Home() {
         <div className="overlay">
           <div className="modal">
             <h2>Welcome!</h2>
-            <p>Tell us your name so we can show your sign-ups and let you manage them.</p>
+            <p>Type the first few letters of your name to find yourself.</p>
             <label className="modal-label">Your name</label>
-            <div style={{ position: 'relative' }}>
-              <input
-                className="modal-input"
-                placeholder="Type your name..."
-                value={nameInput}
-                onChange={e => { setNameInput(e.target.value); setNameSelected(false) }}
-                onKeyDown={e => e.key === 'Enter' && nameSelected && saveName()}
-                autoFocus
-              />
-              {!nameSelected && filteredNames.length > 0 && (
-                <div
-                  style={{
-                    position: 'absolute',
-                    top: 'calc(100% + 6px)',
-                    left: 0,
-                    right: 0,
-                    background: 'var(--white)',
-                    border: '1px solid #ccc',
-                    borderRadius: '8px',
-                    overflow: 'hidden',
-                    zIndex: 10,
-                  }}
-                >
-                  {filteredNames.map(n => (
+            <input
+              className="modal-input"
+              placeholder="Start typing..."
+              value={nameInput}
+              onChange={e => setNameInput(e.target.value)}
+              autoFocus
+            />
+            {nameInput.length > 0 && (
+              <div style={{
+                border: '2px solid var(--grey-light)',
+                borderRadius: '8px',
+                marginBottom: '0.75rem',
+                maxHeight: '200px',
+                overflowY: 'auto',
+              }}>
+                {[
+                  'Clare', 'Dan', 'Harry', 'Jim', 'Mike',
+                  'Olly', 'Pete', 'Ross', 'Sam', 'Tom'
+                ]
+                  .filter(n => n.toLowerCase().startsWith(nameInput.toLowerCase()))
+                  .map(name => (
                     <div
-                      key={n}
-                      role="button"
-                      tabIndex={0}
-                      onClick={() => { setNameInput(n); setNameSelected(true) }}
-                      onKeyDown={e => e.key === 'Enter' && (setNameInput(n), setNameSelected(true))}
+                      key={name}
+                      onClick={() => setNameInput(name)}
                       style={{
-                        padding: '0.55rem 0.75rem',
+                        padding: '0.65rem 1rem',
                         cursor: 'pointer',
-                        borderBottom: '1px solid rgba(0,0,0,0.06)',
+                        borderBottom: '1px solid var(--grey-light)',
+                        fontWeight: 600,
+                        color: 'var(--navy)',
                       }}
-                      onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.background = 'rgba(0,0,0,0.04)' }}
-                      onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.background = 'transparent' }}
+                      onMouseEnter={e => (e.currentTarget.style.background = 'var(--orange-pale)')}
+                      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                     >
-                      {n}
+                      {name}
                     </div>
                   ))}
-                </div>
-              )}
-            </div>
-            <button className="btn-primary" onClick={() => nameSelected && saveName()} disabled={!nameSelected}>
+              </div>
+            )}
+            <button className="btn-primary" onClick={saveName}>
               Let&apos;s go
             </button>
           </div>
