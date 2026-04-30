@@ -225,7 +225,6 @@ export default function Home() {
               const multi = isMultiDay(event.date_start, event.date_end ?? null)
               const { day, month } = getDateParts(event)
               const signupCount = event.signups?.length ?? 0
-              const showingEmails = expandedEmails.has(event.id)
 
               return (
                 <div
