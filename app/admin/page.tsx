@@ -212,6 +212,76 @@ export default function AdminPage() {
   ).size
   const fullEvents = events.filter(e => e.max_volunteers && (e.signups?.length ?? 0) >= e.max_volunteers).length
 
+  function exportCSV() {
+    const rows: string[][] = [['Event', 'Date', 'Volunteer', 'Signed Up']]
+    events.forEach(event => {
+      if (event.signups && event.signups.length > 0) {
+        event.signups.forEach((s: Signup) => {
+          rows.push([
+            event.title,
+            formatEventDate(event.date_start, event.date_end ?? null),
+            s.volunteer_name,
+            new Date(s.created_at).toLocaleDateString('en-GB'),
+          ])
+        })
+      }
+    })
+    const csv = rows.map(r => r.map(cell => `"${cell.replace(/"/g, '""')}"`).join(',')).join('\n')
+    const blob = new Blob([csv], { type: 'text/csv' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `manandboy-signups-${new Date().toISOString().slice(0, 10)}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  function exportPDF() {
+    const printWindow = window.open('', '_blank')
+    if (!printWindow) return
+    const rows = events
+      .filter(e => !e.cancelled && e.signups && e.signups.length > 0)
+      .map(event => `
+      <h3 style="margin: 1.5rem 0 0.5rem; color: #1a1a1a;">${event.title}</h3>
+      <p style="color: #666; margin: 0 0 0.5rem; font-size: 0.9rem;">${formatEventDate(event.date_start, event.date_end ?? null)}</p>
+      <table style="width:100%; border-collapse: collapse; margin-bottom: 1rem;">
+        <thead>
+          <tr style="background: #85C441; color: white;">
+            <th style="padding: 0.5rem; text-align: left;">Volunteer</th>
+            <th style="padding: 0.5rem; text-align: left;">Signed Up</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${event.signups!.map((s: Signup, i: number) => `
+            <tr style="background: ${i % 2 === 0 ? '#f9f9f9' : 'white'};">
+              <td style="padding: 0.5rem; border-bottom: 1px solid #eee;">${s.volunteer_name}</td>
+              <td style="padding: 0.5rem; border-bottom: 1px solid #eee;">${new Date(s.created_at).toLocaleDateString('en-GB')}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `).join('')
+    printWindow.document.write(`
+    <html>
+      <head>
+        <title>MAN&BOY Volunteer Sign-Ups</title>
+        <style>
+          body { font-family: Arial, sans-serif; padding: 2rem; color: #1a1a1a; }
+          h1 { color: #1a1a1a; border-bottom: 3px solid #85C441; padding-bottom: 0.5rem; }
+          p.meta { color: #666; font-size: 0.85rem; margin-top: 0; }
+        </style>
+      </head>
+      <body>
+        <h1>MAN&BOY Volunteer Sign-Ups</h1>
+        <p class="meta">Generated ${new Date().toLocaleDateString('en-GB')}</p>
+        ${rows}
+        <script>window.onload = () => { window.print(); }</script>
+      </body>
+    </html>
+  `)
+    printWindow.document.close()
+  }
+
   if (!authed) {
     return (
       <div className="pin-screen">
@@ -249,6 +319,15 @@ export default function AdminPage() {
         <p className="page-subtitle" style={{ marginBottom: '2rem' }}>Manage events and view volunteer sign-ups.</p>
 
         {statusMsg && <div className="success-msg" style={{ marginBottom: '1rem' }}>{statusMsg}</div>}
+
+        <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem' }}>
+          <button className="btn-sm btn-edit" onClick={exportCSV}>
+            Export CSV
+          </button>
+          <button className="btn-sm btn-edit" onClick={exportPDF}>
+            Export PDF
+          </button>
+        </div>
 
         <div className="admin-section">
           <div className="admin-section-title">Overview</div>
