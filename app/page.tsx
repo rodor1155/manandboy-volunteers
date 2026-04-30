@@ -12,7 +12,6 @@ export default function Home() {
   const [nameInput, setNameInput] = useState('')
   const [nameChosen, setNameChosen] = useState(false)
   const [signupModal, setSignupModal] = useState<Event | null>(null)
-  const [emailInput, setEmailInput] = useState('')
   const [successMsg, setSuccessMsg] = useState('')
   const [errorMsg, setErrorMsg] = useState('')
   const [actionLoading, setActionLoading] = useState<string | null>(null)
@@ -77,7 +76,6 @@ export default function Home() {
       body: JSON.stringify({
         event_id: event.id,
         volunteer_name: myName,
-        volunteer_email: emailInput || null,
       }),
     })
     const data = await res.json()
@@ -93,7 +91,6 @@ export default function Home() {
       }))
       setLastSignup(Date.now())
       setSignupModal(null)
-      setEmailInput('')
       setSuccessMsg(`You're signed up for ${event.title}!`)
       setTimeout(() => setSuccessMsg(''), 4000)
     } else {
@@ -204,19 +201,6 @@ export default function Home() {
             </p>
             <p style={{ marginBottom: '1.2rem' }}>
               {formatEventDate(signupModal.date_start, signupModal.date_end ?? null)}
-            </p>
-            <label className="modal-label">
-              Confirmation email <span className="modal-optional">(optional)</span>
-            </label>
-            <input
-              className="modal-input optional"
-              type="email"
-              placeholder="your@email.com"
-              value={emailInput}
-              onChange={e => setEmailInput(e.target.value)}
-            />
-            <p style={{ fontSize: '0.78rem', color: 'var(--grey-dark)', marginBottom: '0.5rem' }}>
-              We&apos;ll show your email to the admin team only. We won&apos;t send automated emails.
             </p>
             <button
               className="btn-primary"
