@@ -42,7 +42,7 @@ export default function Home() {
       if (Date.now() - lastSignup > 15000) {
         fetchEvents()
       }
-    }, 10000)
+    }, 60000)
     return () => clearInterval(interval)
   }, [fetchEvents, lastSignup])
 
