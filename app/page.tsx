@@ -132,14 +132,18 @@ export default function Home() {
             <h2>Welcome!</h2>
             <p>Tell us your name so we can show your sign-ups and let you manage them.</p>
             <label className="modal-label">Your name</label>
-            <input
+            <select
               className="modal-input"
-              placeholder="e.g. Harry"
               value={nameInput}
               onChange={e => setNameInput(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && saveName()}
               autoFocus
-            />
+            >
+              <option value="">Select your name...</option>
+              {['Harry', 'Jim', 'Olly', 'Ross', 'Clare', 'Sam', 'Tom', 'Dan', 'Pete', 'Mike'].map(n => (
+                <option key={n} value={n}>{n}</option>
+              ))}
+            </select>
             <button className="btn-primary" onClick={saveName}>
               Let&apos;s go
             </button>
