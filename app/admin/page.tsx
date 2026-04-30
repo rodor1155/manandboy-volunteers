@@ -218,20 +218,6 @@ export default function AdminPage() {
         </div>
         <p className="page-subtitle">Select the events you&apos;d like to volunteer for.</p>
 
-        {myName && (
-          <div className="name-banner">
-            <div className="name-banner-greeting">
-              Signed in as <span>{myName}</span>
-            </div>
-            <button
-              className="name-banner-change"
-              onClick={() => { setNameInput(myName); setShowNameModal(true) }}
-            >
-              Switch volunteer
-            </button>
-          </div>
-        )}
-
         {successMsg && <div className="success-msg">{successMsg}</div>}
 
         {loading ? (
