@@ -340,7 +340,6 @@ input, textarea, select {
   position: fixed;
   inset: 0;
   background: rgba(26,39,68,0.55);
-  backdrop-filter: blur(3px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -355,6 +354,7 @@ input, textarea, select {
   width: 100%;
   max-width: 420px;
   box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  overflow: visible;
 }
 
 .modal-logo {
