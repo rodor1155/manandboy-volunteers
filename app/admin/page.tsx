@@ -48,7 +48,7 @@ export default function AdminPage() {
     if (res.ok) {
       const data = await res.json()
       setEvents(data)
-      setEvents(data.sort((a: Event, b: Event) => new Date(a.date_start).getTime() - new Date(b.date_start).getTime()))
+      setEvents([...data].sort((a: Event, b: Event) => new Date(a.date_start).getTime() - new Date(b.date_start).getTime()))
     }
     setLoading(false)
   }, [])
