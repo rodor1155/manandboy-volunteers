@@ -317,6 +317,7 @@ export default function AdminPage() {
       <main className="admin-page">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
           <h1 className="page-title" style={{ margin: 0 }}>Admin Panel</h1>
+          <button className="btn-sm btn-edit" onClick={() => router.push('/')}>← Main page</button>
           <button className="btn-sm btn-edit" onClick={handleLogout}>Log out</button>
         </div>
         <p className="page-subtitle" style={{ marginBottom: '2rem' }}>Manage events and view volunteer sign-ups.</p>
