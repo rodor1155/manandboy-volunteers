@@ -38,6 +38,7 @@ export default function AdminPage() {
   const [volunteers, setVolunteers] = useState<Array<{ id: string; name: string; email: string | null; notes: string | null; active: boolean }>>([])
   const [volunteerForm, setVolunteerForm] = useState({ name: '', email: '', notes: '' })
   const [editingVolunteerId, setEditingVolunteerId] = useState<string | null>(null)
+  const [addVolunteerSelections, setAddVolunteerSelections] = useState<Record<string, string>>({})
 
   const fetchEvents = useCallback(async (p: string) => {
     setLoading(true)
@@ -47,6 +48,7 @@ export default function AdminPage() {
     if (res.ok) {
       const data = await res.json()
       setEvents(data)
+      setEvents(data.sort((a: Event, b: Event) => new Date(a.date_start).getTime() - new Date(b.date_start).getTime()))
     }
     setLoading(false)
   }, [])
@@ -285,6 +287,18 @@ export default function AdminPage() {
     printWindow.document.close()
   }
 
+  async function handleAdminAddVolunteer(eventId: string) {
+    const name = addVolunteerSelections[eventId]
+    if (!name) return
+    await fetch('/api/signups', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ event_id: eventId, volunteer_name: name }),
+    })
+    setAddVolunteerSelections(prev => ({ ...prev, [eventId]: '' }))
+    fetchEvents(pin)
+  }
+
   if (!authed) {
     return (
       <div className="pin-screen">
@@ -447,6 +461,21 @@ export default function AdminPage() {
                             </div>
                           </div>
                         ))}
+                      </div>
+                      <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem', alignItems: 'center' }}>
+                        <select
+                          style={{ flex: 1, padding: '0.4rem 0.6rem', borderRadius: '6px', border: '1px solid var(--grey-mid)', fontSize: '0.85rem' }}
+                          value={addVolunteerSelections[event.id] || ''}
+                          onChange={e => setAddVolunteerSelections(prev => ({ ...prev, [event.id]: e.target.value }))}
+                        >
+                          <option value="">Add a volunteer...</option>
+                          {volunteers.filter(v => v.active).map(v => (
+                            <option key={v.id} value={v.name}>{v.name}</option>
+                          ))}
+                        </select>
+                        <button className="btn-sm btn-edit" onClick={() => handleAdminAddVolunteer(event.id)}>
+                          Add
+                        </button>
                       </div>
                     </div>
                   )}
