@@ -51,6 +51,9 @@ A Next.js app with:
    NEXT_PUBLIC_SUPABASE_URL        = (paste Project URL from Step 1)
    NEXT_PUBLIC_SUPABASE_ANON_KEY   = (paste anon key from Step 1)
    ADMIN_PIN                       = 2304
+   RESEND_API_KEY                  = (paste Resend API key)
+   ADMIN_EMAIL                     = (address that should receive signup notifications)
+   EMAIL_FROM                      = MAN&BOY Volunteers <noreply@manandboy.org>
 
 5. Click Deploy
 6. Wait ~2 minutes for the build to complete
@@ -74,6 +77,11 @@ Admin panel:
 - Try editing an existing event
 - Try cancelling and restoring an event
 - Check the MI dashboard updates
+
+Email:
+- Confirm manandboy.org is verified in Resend after the DNS update
+- Sign up for an event and confirm ADMIN_EMAIL receives the notification
+- Withdraw from the event and confirm ADMIN_EMAIL receives the notification
 
 ---
 

@@ -5,7 +5,7 @@ const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KE
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@manandboy.org'
 
-/** Once the manandboy.org domain is verified in Resend, this sends from noreply@manandboy.org. */
+/** Sends from the verified manandboy.org domain by default. */
 const FROM_EMAIL = process.env.EMAIL_FROM || 'MAN&BOY Volunteers <noreply@manandboy.org>'
 
 export type VolunteerActivity =
