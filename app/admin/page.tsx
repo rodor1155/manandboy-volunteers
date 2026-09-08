@@ -109,6 +109,7 @@ export default function AdminPage() {
     if (!res.ok) {
       setStatusMsg('Failed to save event. Please try again.')
       setSaving(false)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
       return
     }
     setForm(emptyForm)
