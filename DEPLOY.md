@@ -97,6 +97,16 @@ For the Man & Boy website, they can embed it with:
 
 ---
 
+## Fixing "Edit" not saving on events (missing address column)
+
+If your Supabase project was created before the address field was added,
+editing any existing event will silently fail (creating new events still
+works). Fix it by running this once in the Supabase SQL editor:
+
+   alter table events add column if not exists address text;
+
+---
+
 ## Updating the admin PIN later
 
 1. Go to Vercel > your project > Settings > Environment Variables

@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
   if (!checkPin(req)) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
 
   const body = await req.json()
-  const { title, date_start, date_end, description, max_volunteers } = body
+  const { title, date_start, date_end, description, address, max_volunteers } = body
 
   if (!title || !date_start) return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
 
@@ -35,6 +35,7 @@ export async function POST(req: NextRequest) {
       date_start,
       date_end: date_end || null,
       description: description || null,
+      address: address || null,
       max_volunteers: max_volunteers ? parseInt(max_volunteers) : null,
     })
     .select()

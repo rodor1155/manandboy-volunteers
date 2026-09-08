@@ -7,6 +7,7 @@ create table events (
   date_start date not null,
   date_end date,
   description text,
+  address text,
   max_volunteers integer,
   cancelled boolean default false,
   created_at timestamptz default now()
@@ -50,3 +51,7 @@ update events set date_end = '2025-06-28' where title = 'June Camp 2';
 update events set date_end = '2025-07-05' where title = 'Dads, Lads & Lasses';
 update events set date_end = '2025-10-11' where title = 'October Camp 3';
 update events set date_end = '2025-11-15' where title = 'Possible Surrey Camp';
+
+-- Migration: run this in the Supabase SQL editor if your project was created
+-- before the "address" field was added (fixes "Edit" not saving on events).
+-- alter table events add column if not exists address text;
