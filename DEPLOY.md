@@ -4,7 +4,7 @@
 
 A Next.js app with:
 - Public volunteer page (event list, sign up, withdraw)
-- Admin panel at /admin (PIN: 2304)
+- Admin panel at /admin (PIN required; set via `ADMIN_PIN` in Vercel)
 - Supabase backend (events + signups tables)
 - Hosted on Vercel
 
@@ -50,7 +50,7 @@ A Next.js app with:
 
    NEXT_PUBLIC_SUPABASE_URL        = (paste Project URL from Step 1)
    NEXT_PUBLIC_SUPABASE_ANON_KEY   = (paste anon key from Step 1)
-   ADMIN_PIN                       = 2304
+   ADMIN_PIN                       = (choose a new secret PIN; do not reuse any PIN that appeared in old docs or repos)
    RESEND_API_KEY                  = (paste Resend API key)
    ADMIN_EMAIL                     = (address that should receive signup notifications)
    EMAIL_FROM                      = MAN&BOY Volunteers <noreply@manandboy.org>
@@ -72,7 +72,7 @@ Volunteer view:
 
 Admin panel:
 - Go to [your-url]/admin
-- Enter PIN: 2304
+- Enter the admin PIN you set in `ADMIN_PIN`
 - Try adding a new event with a volunteer cap
 - Try editing an existing event
 - Try cancelling and restoring an event
@@ -90,7 +90,7 @@ Email:
 Send Clare:
 - The Vercel URL for the volunteer page
 - The /admin URL
-- PIN: 2304
+- The admin PIN through a private channel (not email or Slack)
 
 For the Man & Boy website, they can embed it with:
    <iframe src="YOUR_VERCEL_URL" width="100%" height="800" frameborder="0"></iframe>
@@ -110,8 +110,9 @@ works). Fix it by running this once in the Supabase SQL editor:
 ## Updating the admin PIN later
 
 1. Go to Vercel > your project > Settings > Environment Variables
-2. Update ADMIN_PIN to your new 4-digit PIN
+2. Update `ADMIN_PIN` to a new secret value
 3. Redeploy (Vercel > Deployments > Redeploy)
+4. Share the new PIN privately with admins who need access
 
 ---
 

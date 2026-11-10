@@ -1,15 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
+import { isAdmin, isAdminPinConfigured } from '@/lib/admin-auth'
 
-const ADMIN_PIN = process.env.ADMIN_PIN || '2304'
-
-function checkPin(req: NextRequest) {
-  const pin = req.headers.get('x-admin-pin')
-  return pin === ADMIN_PIN
+function requireAdmin(req: NextRequest) {
+  if (!isAdminPinConfigured()) {
+    return NextResponse.json({ error: 'Admin authentication is not configured' }, { status: 503 })
+  }
+  if (!isAdmin(req)) {
+    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
+  }
+  return null
 }
 
 export async function GET(req: NextRequest) {
-  if (!checkPin(req)) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
+  const denied = requireAdmin(req)
+  if (denied) return denied
 
   const { data, error } = await supabase
     .from('events')
@@ -21,7 +26,8 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  if (!checkPin(req)) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
+  const denied = requireAdmin(req)
+  if (denied) return denied
 
   const body = await req.json()
   const { title, date_start, date_end, description, address, max_volunteers } = body
@@ -46,7 +52,8 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
-  if (!checkPin(req)) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
+  const denied = requireAdmin(req)
+  if (denied) return denied
 
   const body = await req.json()
   const { id, ...updates } = body
@@ -70,19 +77,18 @@ export async function PATCH(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  if (!checkPin(req)) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
+  const denied = requireAdmin(req)
+  if (denied) return denied
 
   const { id, signup_id } = await req.json()
 
   if (signup_id) {
-    // Delete a specific signup (admin override)
     const { error } = await supabase.from('signups').delete().eq('id', signup_id)
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
     return NextResponse.json({ success: true })
   }
 
   if (id) {
-    // Delete entire event (cascades signups)
     const { error } = await supabase.from('events').delete().eq('id', id)
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
     return NextResponse.json({ success: true })
