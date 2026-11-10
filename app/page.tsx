@@ -3,6 +3,13 @@ import { useState, useEffect, useCallback } from 'react'
 import Header from '@/components/Header'
 import { Event, Signup } from '@/lib/supabase'
 import { formatEventDate, isMultiDay } from '@/lib/dates'
+import {
+  clearWithdrawToken,
+  getWithdrawToken,
+  setWithdrawToken,
+} from '@/lib/client-withdraw-tokens'
+
+const VOLUNTEER_TOKEN_KEY = 'mb_volunteer_token'
 
 export default function Home() {
   const [events, setEvents] = useState<Event[]>([])
@@ -18,6 +25,7 @@ export default function Home() {
   const [withdrawConfirmEventId, setWithdrawConfirmEventId] = useState<string | null>(null)
   const [lastSignup, setLastSignup] = useState<number>(0)
   const [volunteerNames, setVolunteerNames] = useState<string[]>([])
+  const [volunteerToken, setVolunteerToken] = useState<string | null>(null)
 
   const fetchEvents = useCallback(async () => {
     const res = await fetch('/api/events', { cache: 'no-store' })
@@ -30,8 +38,27 @@ export default function Home() {
   useEffect(() => {
     fetchEvents()
     const saved = localStorage.getItem('mb_volunteer_name')
+    const savedToken = localStorage.getItem(VOLUNTEER_TOKEN_KEY)
     if (saved) {
       setMyName(saved)
+      if (savedToken) {
+        setVolunteerToken(savedToken)
+      } else {
+        fetch('/api/volunteer-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: saved }),
+        })
+          .then(async res => {
+            if (!res.ok) return
+            const data = await res.json()
+            if (data.token) {
+              setVolunteerToken(data.token)
+              localStorage.setItem(VOLUNTEER_TOKEN_KEY, data.token)
+            }
+          })
+          .catch(() => {})
+      }
     } else {
       setShowNameModal(true)
     }
@@ -59,11 +86,24 @@ export default function Home() {
     loadVolunteers()
   }, [])
 
-  function saveName() {
+  async function saveName() {
     if (!nameInput.trim()) return
     const name = nameInput.trim()
-    setMyName(name)
-    localStorage.setItem('mb_volunteer_name', name)
+    setErrorMsg('')
+    const res = await fetch('/api/volunteer-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name }),
+    })
+    const data = await res.json()
+    if (!res.ok) {
+      setErrorMsg(data.error || 'Could not verify your name. Choose from the list.')
+      return
+    }
+    setMyName(data.name ?? name)
+    setVolunteerToken(data.token)
+    localStorage.setItem('mb_volunteer_name', data.name ?? name)
+    localStorage.setItem(VOLUNTEER_TOKEN_KEY, data.token)
     setShowNameModal(false)
     setNameInput('')
     setNameChosen(false)
@@ -84,9 +124,17 @@ export default function Home() {
     if (!myName) { setShowNameModal(true); return }
     setErrorMsg('')
     setActionLoading(event.id)
+    if (!volunteerToken) {
+      setActionLoading(null)
+      setShowNameModal(true)
+      return
+    }
     const res = await fetch('/api/signups', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'x-volunteer-token': volunteerToken,
+      },
       body: JSON.stringify({
         event_id: event.id,
         volunteer_name: myName,
@@ -95,12 +143,16 @@ export default function Home() {
     const data = await res.json()
     setActionLoading(null)
     if (res.ok) {
+      if (data.withdraw_token && data.id) {
+        setWithdrawToken(data.id, data.withdraw_token)
+      }
+      const { withdraw_token: _w, ...signup } = data
       // Optimistically update local state immediately
       setEvents(prev => prev.map(e => {
         if (e.id !== event.id) return e
         return {
           ...e,
-          signups: [...(e.signups || []), data]
+          signups: [...(e.signups || []), signup]
         }
       }))
       setLastSignup(Date.now())
@@ -116,14 +168,21 @@ export default function Home() {
     const signup = getMySignup(event)
     if (!signup) return
     setActionLoading(event.id)
+    const withdrawToken = getWithdrawToken(signup.id)
+    if (!withdrawToken) {
+      setActionLoading(null)
+      setErrorMsg('Session expired. Sign out and choose your name again to withdraw.')
+      return
+    }
     const res = await fetch('/api/signups', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ signup_id: signup.id }),
+      body: JSON.stringify({ signup_id: signup.id, withdraw_token: withdrawToken }),
     })
     setActionLoading(null)
     setWithdrawConfirmEventId(null)
     if (res.ok) {
+      clearWithdrawToken(signup.id)
       setEvents(prev => prev.map(e => {
         if (e.id !== event.id) return e
         return { ...e, signups: (e.signups || []).filter(s => s.id !== signup.id) }
@@ -193,6 +252,19 @@ export default function Home() {
                   ))}
               </div>
             </div>
+            {errorMsg && (
+              <div
+                className="success-msg"
+                style={{
+                  marginTop: '0.75rem',
+                  background: 'var(--red-pale)',
+                  borderColor: 'var(--red)',
+                  color: 'var(--red)',
+                }}
+              >
+                {errorMsg}
+              </div>
+            )}
             <button
               className="btn-primary"
               onClick={saveName}
@@ -253,7 +325,15 @@ export default function Home() {
             </div>
             <button
               className="name-banner-change"
-              onClick={() => { setMyName(''); setNameInput(''); setNameChosen(false); localStorage.removeItem('mb_volunteer_name'); setShowNameModal(true) }}
+              onClick={() => {
+                setMyName('')
+                setVolunteerToken(null)
+                setNameInput('')
+                setNameChosen(false)
+                localStorage.removeItem('mb_volunteer_name')
+                localStorage.removeItem(VOLUNTEER_TOKEN_KEY)
+                setShowNameModal(true)
+              }}
             >
               Sign Out
             </button>
