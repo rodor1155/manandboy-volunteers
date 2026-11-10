@@ -21,16 +21,39 @@ create table signups (
   created_at timestamptz default now()
 );
 
--- Enable RLS but allow public read/write (no auth for this app)
+create table volunteers (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  email text,
+  notes text,
+  active boolean not null default true,
+  created_at timestamptz default now()
+);
+
+create unique index volunteers_name_lower_idx on volunteers (lower(trim(name)));
+
+-- RLS: anon is read-only with least privilege; server uses service_role for writes/admin.
 alter table events enable row level security;
 alter table signups enable row level security;
+alter table volunteers enable row level security;
 
-create policy "Public read events" on events for select using (true);
-create policy "Public read signups" on signups for select using (true);
-create policy "Public insert signups" on signups for insert with check (true);
-create policy "Public delete signups" on signups for delete using (true);
-create policy "Service manage events" on events for all using (true);
-create policy "Service manage signups" on signups for all using (true);
+create policy "anon_select_events"
+  on events for select to anon using (true);
+
+create policy "anon_select_signups"
+  on signups for select to anon using (true);
+
+create policy "anon_select_active_volunteers"
+  on volunteers for select to anon using (active is true);
+
+revoke all on table events from anon;
+grant select on table events to anon;
+
+revoke all on table signups from anon;
+grant select (id, event_id, volunteer_name, created_at) on table signups to anon;
+
+revoke all on table volunteers from anon;
+grant select (name) on table volunteers to anon;
 
 -- Seed the initial events
 insert into events (title, date_start, max_volunteers) values
