@@ -97,6 +97,21 @@ For the Man & Boy website, they can embed it with:
 
 ---
 
+## Security: tighten RLS (existing projects)
+
+If your project still uses the original open RLS policies (`Public insert signups`,
+`Service manage events`, etc.), run the migration once in the SQL Editor:
+
+`supabase/migrations/20261110120000_tighten_anon_rls_least_privilege.sql`
+
+**Apply only after** deploying the API change that uses `SUPABASE_SERVICE_ROLE_KEY`
+on server routes (a separate PR). Until then, sign-ups and admin writes will fail
+against the database.
+
+See `supabase/migrations/README.md` for what the public `anon` role can still read.
+
+---
+
 ## Fixing "Edit" not saving on events (missing address column)
 
 If your Supabase project was created before the address field was added,
