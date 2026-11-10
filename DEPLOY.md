@@ -50,6 +50,8 @@ A Next.js app with:
 
    NEXT_PUBLIC_SUPABASE_URL        = (paste Project URL from Step 1)
    NEXT_PUBLIC_SUPABASE_ANON_KEY   = (paste anon key from Step 1)
+   SUPABASE_SERVICE_ROLE_KEY       = (service role key — server API routes only; never expose to the browser)
+   SIGNING_SECRET                  = (long random string for volunteer session + withdraw tokens)
    ADMIN_PIN                       = 2304
    RESEND_API_KEY                  = (paste Resend API key)
    ADMIN_EMAIL                     = (address that should receive signup notifications)

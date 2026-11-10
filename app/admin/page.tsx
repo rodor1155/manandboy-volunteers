@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import Header from '@/components/Header'
 import { Event, Signup } from '@/lib/supabase'
 import { formatEventDate } from '@/lib/dates'
+import { escapeHtml } from '@/lib/escape-html'
 
 type EventForm = {
   title: string
@@ -247,8 +248,8 @@ export default function AdminPage() {
     const rows = events
       .filter(e => !e.cancelled && e.signups && e.signups.length > 0)
       .map(event => `
-      <h3 style="margin: 1.5rem 0 0.5rem; color: #1a1a1a;">${event.title}</h3>
-      <p style="color: #666; margin: 0 0 0.5rem; font-size: 0.9rem;">${formatEventDate(event.date_start, event.date_end ?? null)}</p>
+      <h3 style="margin: 1.5rem 0 0.5rem; color: #1a1a1a;">${escapeHtml(event.title)}</h3>
+      <p style="color: #666; margin: 0 0 0.5rem; font-size: 0.9rem;">${escapeHtml(formatEventDate(event.date_start, event.date_end ?? null))}</p>
       <table style="width:100%; border-collapse: collapse; margin-bottom: 1rem;">
         <thead>
           <tr style="background: #85C441; color: white;">
@@ -259,8 +260,8 @@ export default function AdminPage() {
         <tbody>
           ${event.signups!.map((s: Signup, i: number) => `
             <tr style="background: ${i % 2 === 0 ? '#f9f9f9' : 'white'};">
-              <td style="padding: 0.5rem; border-bottom: 1px solid #eee;">${s.volunteer_name}</td>
-              <td style="padding: 0.5rem; border-bottom: 1px solid #eee;">${new Date(s.created_at).toLocaleDateString('en-GB')}</td>
+              <td style="padding: 0.5rem; border-bottom: 1px solid #eee;">${escapeHtml(s.volunteer_name)}</td>
+              <td style="padding: 0.5rem; border-bottom: 1px solid #eee;">${escapeHtml(new Date(s.created_at).toLocaleDateString('en-GB'))}</td>
             </tr>
           `).join('')}
         </tbody>
@@ -292,7 +293,7 @@ export default function AdminPage() {
     if (!name) return
     await fetch('/api/signups', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: adminHeader(),
       body: JSON.stringify({ event_id: eventId, volunteer_name: name }),
     })
     setAddVolunteerSelections(prev => ({ ...prev, [eventId]: '' }))
