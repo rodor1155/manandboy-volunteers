@@ -1,11 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
-
-const ADMIN_PIN = process.env.ADMIN_PIN || '2304'
+import { isAdmin, isAdminPinConfigured } from '@/lib/admin-auth'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET() {
+function requireAdmin(req: NextRequest) {
+  if (!isAdminPinConfigured()) {
+    return NextResponse.json({ error: 'Admin authentication is not configured' }, { status: 503 })
+  }
+  if (!isAdmin(req)) {
+    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
+  }
+  return null
+}
+
+export async function GET(req: NextRequest) {
+  const denied = requireAdmin(req)
+  if (denied) return denied
+
   const { data, error } = await supabase
     .from('volunteers')
     .select('*')
@@ -15,8 +27,9 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const pin = req.headers.get('x-admin-pin')
-  if (pin !== ADMIN_PIN) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
+  const denied = requireAdmin(req)
+  if (denied) return denied
+
   const body = await req.json()
   const { name, email, notes } = body
   if (!name) return NextResponse.json({ error: 'Name is required' }, { status: 400 })
@@ -30,8 +43,9 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
-  const pin = req.headers.get('x-admin-pin')
-  if (pin !== ADMIN_PIN) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
+  const denied = requireAdmin(req)
+  if (denied) return denied
+
   const body = await req.json()
   const { id, ...updates } = body
   if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 })
@@ -46,8 +60,9 @@ export async function PATCH(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  const pin = req.headers.get('x-admin-pin')
-  if (pin !== ADMIN_PIN) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
+  const denied = requireAdmin(req)
+  if (denied) return denied
+
   const { id } = await req.json()
   if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 })
   const { error } = await supabase.from('volunteers').delete().eq('id', id)

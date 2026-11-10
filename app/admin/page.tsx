@@ -40,22 +40,24 @@ export default function AdminPage() {
   const [editingVolunteerId, setEditingVolunteerId] = useState<string | null>(null)
   const [addVolunteerSelections, setAddVolunteerSelections] = useState<Record<string, string>>({})
 
-  const fetchEvents = useCallback(async (p: string) => {
+  const adminFetch = useCallback((input: RequestInfo, init: RequestInit = {}) => {
+    return fetch(input, { ...init, credentials: 'include' })
+  }, [])
+
+  const fetchEvents = useCallback(async () => {
     setLoading(true)
-    const res = await fetch('/api/admin', {
-      headers: { 'x-admin-pin': p }
-    })
+    const res = await adminFetch('/api/admin')
     if (res.ok) {
       const data = await res.json()
       setEvents(data)
+    } else if (res.status === 401) {
+      setAuthed(false)
     }
     setLoading(false)
-  }, [])
+  }, [adminFetch])
 
-  async function fetchVolunteers(p: string) {
-    const res = await fetch('/api/volunteers', {
-      headers: { 'x-admin-pin': p },
-    })
+  async function fetchVolunteers() {
+    const res = await adminFetch('/api/volunteers')
     if (!res.ok) return
     const data = await res.json()
     if (!Array.isArray(data)) return
@@ -70,38 +72,46 @@ export default function AdminPage() {
     )
   }
 
-  function handleLogout() {
+  async function handleLogout() {
+    await adminFetch('/api/admin/logout', { method: 'POST' })
     setAuthed(false)
     setPin('')
     setEvents([])
     router.push('/')
   }
 
-  function handlePinSubmit() {
-    if (pin === '2304') {
-      setAuthed(true)
-      setPinError(false)
-      fetchEvents(pin)
-      fetchVolunteers(pin)
-    } else {
+  async function handlePinSubmit() {
+    const res = await fetch('/api/admin/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ pin }),
+    })
+    if (!res.ok) {
       setPinError(true)
+      return
     }
+    setAuthed(true)
+    setPinError(false)
+    setPin('')
+    fetchEvents()
+    fetchVolunteers()
   }
 
   function adminHeader() {
-    return { 'x-admin-pin': pin, 'Content-Type': 'application/json' }
+    return { 'Content-Type': 'application/json' }
   }
 
   async function handleSave() {
     if (!form.title || !form.date_start) return alert('Title and start date are required')
     setSaving(true)
     const res = editingId
-      ? await fetch('/api/admin', {
+      ? await adminFetch('/api/admin', {
         method: 'PATCH',
         headers: adminHeader(),
         body: JSON.stringify({ id: editingId, ...form }),
       })
-      : await fetch('/api/admin', {
+      : await adminFetch('/api/admin', {
         method: 'POST',
         headers: adminHeader(),
         body: JSON.stringify(form),
@@ -115,7 +125,7 @@ export default function AdminPage() {
     setForm(emptyForm)
     setEditingId(null)
     setSaving(false)
-    fetchEvents(pin)
+    fetchEvents()
   }
 
   function startEdit(event: Event) {
@@ -132,39 +142,39 @@ export default function AdminPage() {
   }
 
   async function toggleCancel(event: Event) {
-    await fetch('/api/admin', {
+    await adminFetch('/api/admin', {
       method: 'PATCH',
       headers: adminHeader(),
       body: JSON.stringify({ id: event.id, cancelled: !event.cancelled }),
     })
-    fetchEvents(pin)
+    fetchEvents()
   }
 
   async function deleteEvent(event: Event) {
     if (!confirm(`Permanently delete "${event.title}" and all its sign-ups?`)) return
-    await fetch('/api/admin', {
+    await adminFetch('/api/admin', {
       method: 'DELETE',
       headers: adminHeader(),
       body: JSON.stringify({ id: event.id }),
     })
-    fetchEvents(pin)
+    fetchEvents()
   }
 
   async function removeSignup(signupId: string) {
-    await fetch('/api/admin', {
+    await adminFetch('/api/admin', {
       method: 'DELETE',
       headers: adminHeader(),
       body: JSON.stringify({ signup_id: signupId }),
     })
     setStatusMsg('Volunteer removed')
     setTimeout(() => setStatusMsg(''), 3000)
-    fetchEvents(pin)
+    fetchEvents()
   }
 
   async function handleSaveVolunteer() {
     if (!volunteerForm.name.trim()) return
     if (editingVolunteerId) {
-      await fetch('/api/volunteers', {
+      await adminFetch('/api/volunteers', {
         method: 'PATCH',
         headers: adminHeader(),
         body: JSON.stringify({
@@ -175,7 +185,7 @@ export default function AdminPage() {
         }),
       })
     } else {
-      await fetch('/api/volunteers', {
+      await adminFetch('/api/volunteers', {
         method: 'POST',
         headers: adminHeader(),
         body: JSON.stringify({
@@ -187,26 +197,26 @@ export default function AdminPage() {
     }
     setVolunteerForm({ name: '', email: '', notes: '' })
     setEditingVolunteerId(null)
-    fetchVolunteers(pin)
+    fetchVolunteers()
   }
 
   async function handleDeleteVolunteer(id: string) {
     if (!confirm('Delete this volunteer?')) return
-    await fetch('/api/volunteers', {
+    await adminFetch('/api/volunteers', {
       method: 'DELETE',
       headers: adminHeader(),
       body: JSON.stringify({ id }),
     })
-    fetchVolunteers(pin)
+    fetchVolunteers()
   }
 
   async function handleToggleActive(v: { id: string; active: boolean }) {
-    await fetch('/api/volunteers', {
+    await adminFetch('/api/volunteers', {
       method: 'PATCH',
       headers: adminHeader(),
       body: JSON.stringify({ id: v.id, active: !v.active }),
     })
-    fetchVolunteers(pin)
+    fetchVolunteers()
   }
 
   const totalSignups = events.reduce((sum, e) => sum + (e.signups?.length ?? 0), 0)
@@ -296,7 +306,7 @@ export default function AdminPage() {
       body: JSON.stringify({ event_id: eventId, volunteer_name: name }),
     })
     setAddVolunteerSelections(prev => ({ ...prev, [eventId]: '' }))
-    fetchEvents(pin)
+    fetchEvents()
   }
 
   if (!authed) {
